@@ -2,7 +2,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,17 +16,12 @@ func main() {
 			os.Exit(1)
 		}
 		defer resp.Body.Close()
-		var buf bytes.Buffer
-		b, err := io.Copy(&buf, resp.Body)
+		b, err := io.Copy(os.Stdout, resp.Body)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "fetch: reading %s: %v\n", url, err)
 			os.Exit(1)
 		}
+		fmt.Println()
 		fmt.Println("number of bytes copied: ", b)
-		var totalBuf int
-		for i := range buf {
-			totalBuf++
-		}
-		fmt.Println(totalBuf)
 	}
 }
