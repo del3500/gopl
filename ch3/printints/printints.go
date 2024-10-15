@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 // intsToString is like fmt.Sprintf(values) but adds commas.
@@ -20,16 +21,35 @@ func intsToString(values []int) string {
 	return buf.String()
 }
 
+func FractionPart(s string) string {
+	var buf bytes.Buffer
+	i := strings.Index(s, ".")
+	buf.WriteString(s[i:])
+	return buf.String()
+}
+
 // Bytes will take a string a parameter, the will add a comma
 // every after 3rd character of the string starting from len(n - 1)
 func BytesComma(s string) string {
 	var buf bytes.Buffer
+	var fBuf bytes.Buffer
 	n := len(s)
 	if n <= 3 {
 		return s
 	}
+	// Get the "." for to determine if it's floating point number.
+	var dotOffset int
+	for i := 0; i < n; i++ {
+		if s[i] == '.' {
+			dotOffset = i
+			break
+		}
+	}
+	if dotOffset > 0 {
+		fBuf.WriteString(s[dotOffset:])
+	}
 	// calculate the number of characters before the first comma
-	prefix := n % 3
+	prefix := buf.Len() % 3
 	if prefix > 0 {
 		buf.WriteString(s[:prefix])
 	}
@@ -39,6 +59,7 @@ func BytesComma(s string) string {
 		}
 		buf.WriteString(s[i : i+3])
 	}
+	buf.Write(fBuf.Bytes())
 	return buf.String()
 }
 
