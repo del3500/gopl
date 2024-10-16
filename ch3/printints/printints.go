@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -21,14 +22,45 @@ func intsToString(values []int) string {
 	return buf.String()
 }
 
-func FractionPart(s string) string {
+func FractionPart(s string) (string, error) {
 	var buf bytes.Buffer
 	i := strings.Index(s, ".")
+	if i < 0 {
+		return "", errors.New("no fraction part")
+	}
 	buf.WriteString(s[i:])
+	return buf.String(), nil
+}
+
+func IntegerPart(s string) string {
+	var buf bytes.Buffer
+	i := strings.Index(s, ".")
+	buf.WriteString(s[:i])
 	return buf.String()
 }
 
-// Bytes will take a string a parameter, the will add a comma
+func AddComma(integer, fraction string) string {
+	var buf bytes.Buffer
+	n := len(integer)
+	if n <= 3 {
+		buf.WriteString(integer + fraction)
+		return buf.String()
+	}
+	prefix := n % 3
+	if prefix > 0 {
+		buf.WriteString(integer[:prefix])
+	}
+	for i := prefix; i < n; i += 3 {
+		if buf.Len() > 0 {
+			buf.WriteByte(',')
+		}
+		buf.WriteString(integer[i : i+3])
+	}
+	buf.WriteString(fraction)
+	return buf.String()
+}
+
+/* Bytes will take a string a parameter, the will add a comma
 // every after 3rd character of the string starting from len(n - 1)
 func BytesComma(s string) string {
 	var buf bytes.Buffer
@@ -61,9 +93,8 @@ func BytesComma(s string) string {
 	}
 	buf.Write(fBuf.Bytes())
 	return buf.String()
-}
+}*/
 
 func main() {
 	fmt.Println(intsToString([]int{1, 2, 3}))
-	fmt.Println(BytesComma("1231232134"))
 }
