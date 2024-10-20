@@ -2,10 +2,12 @@ package main
 
 import "fmt"
 
+// Circular array
+
 func main() {
 
 	s := []int{1, 2, 3, 4, 5}
-	reverse(s, 0, len(s)-1)
+	rotateRight(s, 3)
 	fmt.Println(s)
 
 }
@@ -18,5 +20,22 @@ func reverse(s []int, start, end int) {
 
 // TODO: rotate right by k times.
 func rotateRight(s []int, k int) {
+	n := len(s)
+	if n == 0 {
+		return
+	}
 
+	k = k % n
+	if k == 0 {
+		return
+	}
+
+	// Reverse the entire array
+	reverse(s, 0, n-1)
+
+	// Reverse the first k-elements
+	reverse(s, 0, k-1)
+
+	// Reverse the remaining n-k elements
+	reverse(s, k, n-1)
 }
