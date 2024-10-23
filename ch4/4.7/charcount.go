@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -12,6 +13,8 @@ func main() {
 	counts := make(map[rune]int)
 	var utflen [utf8.UTFMax + 1]int
 	invalid := 0
+	letters := 0
+	numbers := 0
 
 	in := bufio.NewReader(os.Stdin)
 	for {
@@ -24,5 +27,33 @@ func main() {
 			fmt.Fprintf(os.Stderr, "charcount: %v\n", err)
 			os.Exit(1)
 		}
+
+		switch {
+		case r == unicode.ReplacementChar && n == 1:
+			invalid++
+		case unicode.IsLetter(r) && n == 1:
+			letters++
+		case unicode.IsNumber(r) && n == 1:
+			numbers++
+		}
+		counts[r]++
+		utflen[n]++
 	}
+
+	fmt.Printf("rune\tcount\n")
+	for c, n := range counts {
+		fmt.Printf("%q\t%d\n", c, n)
+	}
+	fmt.Printf("letters\tcount\n")
+	fmt.Printf("\nlen\tcount\n")
+	for i, n := range utflen {
+		if i > 0 {
+			fmt.Printf("%d\t%d\n", i, n)
+		}
+	}
+	if invalid > 0 {
+		fmt.Printf("\n%d invalid UTF-8 characters\n", invalid)
+	}
+	fmt.Printf("\n%d letters are found\n", letters)
+	fmt.Printf("\n%d numbers are found\n", numbers)
 }
