@@ -22,11 +22,37 @@ type Issue struct {
 	Labels []string `json:"labels"`
 }
 
+type ListIssue struct {
+	Title string `json:"title"`
+	NODE  string `json:"node_id"`
+}
+
 var token = os.Getenv("GITHUB_TOKEN")
 
 func main() {
-	authenticate(token)
-	createIssue(token)
+	listIssues(token)
+}
+
+func listIssues(token string) {
+	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/repos/del3500/go-http/issues", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		var issue []ListIssue
+		json.NewDecoder(resp.Body).Decode(&issue)
+		fmt.Println(issue)
+	}
 }
 
 func authenticate(token string) {
@@ -54,47 +80,6 @@ func authenticate(token string) {
 	}
 }
 
-/*
-func createIssue(token string) {
-	body := &Issue{
-		Title:  "Sample",
-		Body:   "Sample",
-		Labels: "Sample",
-	}
-
-	jsonData, err := json.Marshal(body)
-	if err != nil {
-		log.Fatalf("Error marshaling JSON: %v", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, "/repos/del3500/go-http/issues", bytes.NewBuffer(jsonData))
-	if err != nil {
-		fmt.Errorf("error: %v", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Errorf("error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	resbdy, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Errorf("error: %v", err)
-	}
-
-	if resp.StatusCode == 201 {
-		fmt.Println("Post request successful: Response: ", string(resbdy))
-	} else {
-		fmt.Errorf("Received a non-200 response status: %s. Response: %s", resp.Status, string(resbdy))
-	}
-
-}*/
-
 func createIssue(token string) {
 	body := &Issue{
 		Title:  "Sample",
@@ -106,7 +91,6 @@ func createIssue(token string) {
 	if err != nil {
 		log.Fatalf("Error marshaling JSON: %v", err)
 	}
-
 	// Ensure you have the full URL
 	url := "https://api.github.com/repos/del3500/go-http/issues" // Use the correct full URL
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
@@ -123,7 +107,6 @@ func createIssue(token string) {
 		log.Fatalf("Error sending request: %v", err)
 	}
 	defer resp.Body.Close()
-
 	// Check if response is nil
 	if resp == nil {
 		log.Fatalf("Received nil response")
