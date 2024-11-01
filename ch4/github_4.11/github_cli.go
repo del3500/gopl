@@ -20,20 +20,60 @@ type Issue struct {
 	Title  string   `json:"title"`
 	Body   string   `json:"body"`
 	Labels []string `json:"labels"`
+	Number int      `json:"number"`
+	State  string   `json:"open"`
 }
 
 type ListIssue struct {
-	Title string `json:"title"`
-	NODE  string `json:"node_id"`
+	Title  string `json:"title"`
+	NODE   string `json:"node_id"`
+	Number int    `json:"number"`
 }
 
 var token = os.Getenv("GITHUB_TOKEN")
 
 func main() {
-	listIssues(token)
+	UpdateIssue(token, 3)
+}
+
+func UpdateIssue(token string, num int) {
+
+	url := fmt.Sprintf("https://api.github.com/repos/del3500/go-http/issues/%d", num)
+	issue := &Issue{
+		Title:  "sample update",
+		Body:   "sample updated body",
+		Number: 321,
+		State:  "close",
+	}
+
+	jsonData, err := json.Marshal(issue)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("error %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		fmt.Println("Update successful.")
+	} else {
+		log.Fatalf("error %v", err)
+	}
 }
 
 func listIssues(token string) {
+	var issue []ListIssue
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/repos/del3500/go-http/issues", nil)
 	if err != nil {
 		log.Fatal(err)
@@ -49,9 +89,8 @@ func listIssues(token string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		var issue []ListIssue
 		json.NewDecoder(resp.Body).Decode(&issue)
-		fmt.Println(issue)
+		fmt.Println(issue[0].Number)
 	}
 }
 
@@ -65,7 +104,6 @@ func authenticate(token string) {
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Errorf("err: %v", err)
