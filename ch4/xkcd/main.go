@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -23,12 +23,38 @@ type XKCD struct {
 }
 
 func main() {
+	var comics []XKCD
+	for i := 0; i < 3; i++ {
+		url := fmt.Sprintf("https://xkcd.com/%d/info.0.json", i)
+		resp, err := http.Get(url)
+		defer resp.Body.Close()
+		if err != nil {
+			log.Fatalf("Error getting file: %v", err)
+		}
+		fmt.Println(resp.Body)
+		if resp.StatusCode == 200 {
+			var comic XKCD
+			json.NewDecoder(resp.Body).Decode(&comic)
+			comics = append(comics, comic)
+		}
+	}
+	jsonData, err := json.Marshal(comics)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = os.WriteFile("/Users/del/dev/gopl/ch4/xkcd/xkcd.json", jsonData, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+/*
 	dir := "/Users/del/dev/gopl/ch4/xkcd/comics"
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 120; i++ {
 		url := fmt.Sprintf("https://xkcd.com/%d/info.0.json", i)
 		fileName := fmt.Sprintf("xkcd-%d", i)
 		out, err := os.Create(dir + "/" + fileName + ".txt")
@@ -45,5 +71,4 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error copying content: %v", err)
 		}
-	}
-}
+*/
