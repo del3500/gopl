@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
 )
 
@@ -19,56 +17,67 @@ type XKCD struct {
 	Alt        string `json:"alt"`
 	Image      string `json:"img"`
 	Title      string `json:"title"`
-	Day        string `json"day"`
+	Day        string `json:"day"`
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
 
 func main() {
-	var comics []XKCD
-	for i := 0; i < 3; i++ {
-		url := fmt.Sprintf("https://xkcd.com/%d/info.0.json", i)
-		resp, err := http.Get(url)
-		defer resp.Body.Close()
-		if err != nil {
-			log.Fatalf("Error getting file: %v", err)
-		}
-		fmt.Println(resp.Body)
-		if resp.StatusCode == 200 {
-			var comic XKCD
-			json.NewDecoder(resp.Body).Decode(&comic)
-			comics = append(comics, comic)
-		}
+	f, err := os.Open("xkcd.json")
+	check(err)
+	defer f.Close()
+	dec := json.NewDecoder(f)
+
+	_, err = dec.Token()
+	check(err)
+
+	for dec.More() {
+		var x XKCD
+		err := dec.Decode(&x)
+		check(err)
+		fmt.Printf("%v: %v\n", x.SafeTitle, x.Year)
 	}
-	jsonData, err := json.Marshal(comics)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = os.WriteFile("/Users/del/dev/gopl/ch4/xkcd/xkcd.json", jsonData, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	_, err = dec.Token()
+	check(err)
 }
 
+/*func getComics(url string, ch chan<- XKCD, wg *sync.WaitGroup) {
+	defer wg.Done()
+	resp, _ := http.Get(url)
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		var comic XKCD
+		json.NewDecoder(resp.Body).Decode(&comic)
+		ch <- comic
+	}
+}*/
+
 /*
-	dir := "/Users/del/dev/gopl/ch4/xkcd/comics"
-	err := os.MkdirAll(dir, 0755)
+	var comics []XKCD
+	ch := make(chan XKCD)
+	var wg sync.WaitGroup
+	for i := 1; i < 3000; i++ {
+		wg.Add(1)
+		url := fmt.Sprintf("https://xkcd.com/%d/info.0.json", i)
+		go getComics(url, ch, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+	for comic := range ch {
+		comics = append(comics, comic)
+	}
+	data, err := json.Marshal(comics)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for i := 0; i < 120; i++ {
-		url := fmt.Sprintf("https://xkcd.com/%d/info.0.json", i)
-		fileName := fmt.Sprintf("xkcd-%d", i)
-		out, err := os.Create(dir + "/" + fileName + ".txt")
-		if err != nil {
-			log.Fatalf("Error creating file: %v", err)
-		}
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Fatalf("Error getting url. Status: %s, Response: %s", resp.StatusCode, resp.Body)
-		}
-		defer resp.Body.Close()
-
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			log.Fatalf("Error copying content: %v", err)
-		}
-*/
+	err = os.WriteFile("/Users/del/dev/gopl/ch4/xkcd/xkcd.json", data, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}*/
