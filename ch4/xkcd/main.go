@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type XKCD struct {
@@ -27,6 +29,10 @@ func check(e error) {
 }
 
 func main() {
+	var search string
+	flag.StringVar(&search, "search", "", "search term")
+	flag.Parse()
+
 	f, err := os.Open("xkcd.json")
 	check(err)
 	defer f.Close()
@@ -35,14 +41,24 @@ func main() {
 	_, err = dec.Token()
 	check(err)
 
+	urls := []string{}
 	for dec.More() {
 		var x XKCD
 		err := dec.Decode(&x)
+		if x.Search(search) {
+			urls = append(urls, x.Image)
+		}
 		check(err)
-		fmt.Printf("%v: %v\n", x.SafeTitle, x.Year)
 	}
 	_, err = dec.Token()
 	check(err)
+	for _, v := range urls {
+		fmt.Println(v)
+	}
+}
+
+func (x *XKCD) Search(s string) bool {
+	return strings.Contains(x.Transcript, s)
 }
 
 /*func getComics(url string, ch chan<- XKCD, wg *sync.WaitGroup) {

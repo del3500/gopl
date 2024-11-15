@@ -9,12 +9,12 @@ import (
 )
 
 func main() {
-
-	words, images, err := CountWordsAndImages("https://example.org")
+	url := `<html><body><p>Hello world!</p><img src="image.jpg" /><p>Another a a paragraph.</p></body></html>`
+	doc, err := html.Parse(strings.NewReader(url))
 	if err != nil {
 		panic(err)
 	}
-
+	words, images := countWordsAndImages(doc)
 	fmt.Printf("words: %d, images: %d", words, images)
 }
 

@@ -12,17 +12,25 @@ func main() {
 
 	doc, err := html.Parse(os.Stdin)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "findlinks1: %v\n", err)
+		fmt.Fprintf(os.Stderr, "outline: %v\n", err)
 		os.Exit(1)
 	}
+	outline(nil, doc)
+}
 
-	for _, link := range visit(nil, doc) {
-		fmt.Println(link)
+func outline(stack []string, n *html.Node) {
+	if n.Type == html.ElementNode {
+		stack = append(stack, n.Data) // push tag
+		fmt.Println(stack)
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		outline(stack, c)
 	}
 }
 
 // visit appends to links each link found in n and returns the result.
-func visit(links []string, n *html.Node) []string {
+func visit(links []string, n *html.Node) {
 	if n.Type == html.ElementNode && n.Data == "a" {
 		for _, a := range n.Attr {
 			if a.Key == "href" {
@@ -31,7 +39,6 @@ func visit(links []string, n *html.Node) []string {
 		}
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		links = visit(links, c)
+		visit(links, c)
 	}
-	return links
 }

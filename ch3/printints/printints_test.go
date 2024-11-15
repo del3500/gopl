@@ -27,14 +27,14 @@ func TestAddComma(t *testing.T) {
 	})
 
 	t.Run("add comma", func(t *testing.T) {
-		str := "982136.7375"
+		str := "93232182136.7345435375"
 		intpart := IntegerPart(str)
 		fracpart, err := FractionPart(str)
 		if err != nil {
 			t.Error(err)
 		}
 		got := AddComma(intpart, fracpart)
-		want := "982,136.7375"
+		want := "93,232,182,136.7345435375"
 		if got != want {
 			t.Errorf("got %s, want %s", got, want)
 		}

@@ -17,11 +17,10 @@ type GitHubUser struct {
 }
 
 type Issue struct {
-	Title  string   `json:"title"`
-	Body   string   `json:"body"`
-	Labels []string `json:"labels"`
-	Number int      `json:"number"`
-	State  string   `json:"open"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	Number int    `json:"number"`
+	State  string `json:"state"`
 }
 
 type ListIssue struct {
@@ -40,10 +39,8 @@ func UpdateIssue(token string, num int) {
 
 	url := fmt.Sprintf("https://api.github.com/repos/del3500/go-http/issues/%d", num)
 	issue := &Issue{
-		Title:  "sample update",
-		Body:   "sample updated body",
-		Number: 321,
-		State:  "close",
+		Title: "sample update",
+		State: "closed",
 	}
 
 	jsonData, err := json.Marshal(issue)
@@ -65,11 +62,12 @@ func UpdateIssue(token string, num int) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
-		fmt.Println("Update successful.")
-	} else {
-		log.Fatalf("error %v", err)
+	fmt.Println(resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Updated failed.\nStatus: %d\nResponse: %s", resp.StatusCode, string(body))
 	}
+
 }
 
 func listIssues(token string) {
@@ -97,7 +95,7 @@ func listIssues(token string) {
 func authenticate(token string) {
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
-		fmt.Errorf("err: %v", err)
+		log.Fatalf("err: %v", err)
 		return
 	}
 
@@ -106,7 +104,7 @@ func authenticate(token string) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Errorf("err: %v", err)
+		log.Fatalf("err: %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -120,9 +118,8 @@ func authenticate(token string) {
 
 func createIssue(token string) {
 	body := &Issue{
-		Title:  "Sample",
-		Body:   "Sample",
-		Labels: []string{"Sample"},
+		Title: "Sample",
+		Body:  "Sample",
 	}
 
 	jsonData, err := json.Marshal(body)

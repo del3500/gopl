@@ -3,6 +3,7 @@ package links
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -14,6 +15,12 @@ import (
 func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
 	if pre != nil {
 		pre(n)
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		forEachNode(c, pre, post)
+	}
+	if post != nil {
+		post(n)
 	}
 }
 
@@ -44,10 +51,26 @@ func Extract(url string) ([]string, error) {
 				if err != nil {
 					continue // ignore bad URLs
 				}
-				links = append(links, link.String())
+				if strings.Contains(link.String(), "go.dev") {
+					links = append(links, link.String())
+				}
 			}
 		}
 	}
 	forEachNode(doc, visitNode, nil)
 	return links, nil
+}
+
+func BreadthFirst(f func(item string) []string, worklist []string) {
+	seen := make(map[string]bool)
+	for len(worklist) > 0 {
+		items := worklist
+		worklist = nil
+		for _, item := range items {
+			if !seen[item] {
+				seen[item] = true
+				worklist = append(worklist, f(item)...)
+			}
+		}
+	}
 }

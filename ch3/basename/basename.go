@@ -1,3 +1,5 @@
+package main
+
 import "strings"
 
 // basename removes directory components and a .suffix.
