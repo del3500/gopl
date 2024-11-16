@@ -52,7 +52,8 @@ func Extract(url string) ([]string, error) {
 					continue // ignore bad URLs
 				}
 				if strings.Contains(link.String(), "go.dev") {
-					links = append(links, link.String())
+					links = append(links, link.Host+link.Path)
+					fmt.Println(link.Host + link.Path)
 				}
 			}
 		}
